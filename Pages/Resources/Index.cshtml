@@ -1,0 +1,66 @@
+﻿@page
+@model ResourceHub.Pages.Resources.IndexModel
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-page="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Resource[0].Title)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Resource[0].Description)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Resource[0].FileName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Resource[0].UploadDate)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Resource[0].Category)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Resource[0].UploaderId)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model.Resource) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Title)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Description)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.FileName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.UploadDate)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Category)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.UploaderId)
+            </td>
+            <td>
+                <a asp-page="./Edit" asp-route-id="@item.Id">Edit</a> |
+                <a asp-page="./Details" asp-route-id="@item.Id">Details</a> |
+                <a asp-page="./Delete" asp-route-id="@item.Id">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

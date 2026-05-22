@@ -1,0 +1,60 @@
+﻿@page
+@model ResourceHub.Pages.Resources.CreateModel
+
+        @{
+        ViewData["Title"] = "Create";
+        }
+        
+        <h1>Create</h1>
+        
+    <h4>Resource</h4>
+    <hr />
+    <div class="row">
+    <div class="col-md-4">
+    <form method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <span class="text-danger">*</span>
+                <label asp-for="Resource.Title" class="control-label"></label>
+                <input asp-for="Resource.Title" class="form-control" aria-required="true"/>
+                <span asp-validation-for="Resource.Title" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Resource.Description" class="control-label"></label>
+                <input asp-for="Resource.Description" class="form-control" />
+                <span asp-validation-for="Resource.Description" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Resource.FileName" class="control-label"></label>
+                <input asp-for="Resource.FileName" class="form-control" />
+                <span asp-validation-for="Resource.FileName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Resource.UploadDate" class="control-label"></label>
+                <input asp-for="Resource.UploadDate" class="form-control" />
+                <span asp-validation-for="Resource.UploadDate" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Resource.Category" class="control-label"></label>
+                <input asp-for="Resource.Category" class="form-control" />
+                <span asp-validation-for="Resource.Category" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Resource.UploaderId" class="control-label"></label>
+                <input asp-for="Resource.UploaderId" class="form-control" />
+                <span asp-validation-for="Resource.UploaderId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-page="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
