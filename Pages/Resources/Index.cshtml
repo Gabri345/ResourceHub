@@ -1,66 +1,68 @@
-﻿@page
+@page
 @model ResourceHub.Pages.Resources.IndexModel
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Resources";
 }
 
-<h1>Index</h1>
+<div class="page-heading">
+    <div>
+        <p class="text-uppercase text-muted small mb-1">Shared library</p>
+        <h1>Resources</h1>
+        <p class="text-muted mb-0">Browse plans, informatics files, images and project material shared by the community.</p>
+    </div>
+    <a asp-page="Create" class="btn btn-primary">Upload</a>
+</div>
 
-<p>
-    <a asp-page="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Resource[0].Title)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Resource[0].Description)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Resource[0].FileName)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Resource[0].UploadDate)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Resource[0].Category)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Resource[0].UploaderId)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model.Resource) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Title)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Description)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.FileName)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.UploadDate)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Category)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.UploaderId)
-            </td>
-            <td>
-                <a asp-page="./Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-page="./Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-page="./Delete" asp-route-id="@item.Id">Delete</a>
-            </td>
-        </tr>
+<form method="get" class="resource-toolbar">
+    <input name="searchTerm" value="@Model.SearchTerm" class="form-control" placeholder="Search by title, description or category" />
+    <select name="category" class="form-select">
+        <option value="">All categories</option>
+        @foreach (var category in new[] { "Informatics", "Plans", "Images", "Presentations", "Homework", "Projects", "Other" })
+        {
+            <option value="@category" selected="@(Model.Category == category)">@category</option>
+        }
+    </select>
+    <button type="submit" class="btn btn-outline-primary">Search</button>
+</form>
+
+@if (!Model.Resource.Any())
+{
+    <div class="empty-state">
+        <h2>No resources yet</h2>
+        <p>Be the first to upload something useful.</p>
+        <a asp-page="Create" class="btn btn-primary">Upload resource</a>
+    </div>
 }
-    </tbody>
-</table>
+else
+{
+    <div class="resource-grid">
+        @foreach (var item in Model.Resource)
+        {
+            var averageRating = item.Ratings.Any() ? item.Ratings.Average(r => r.Value).ToString("0.0") : "No rating";
+
+            <article class="resource-card">
+                <div class="d-flex justify-content-between gap-3">
+                    <span class="badge text-bg-light">@item.Category</span>
+                    @if (item.Reports.Any(r => !r.IsResolved))
+                    {
+                        <span class="badge text-bg-warning">Reported</span>
+                    }
+                </div>
+                <h2>@item.Title</h2>
+                <p>@item.Description</p>
+                <div class="resource-meta">
+                    <span>@item.UploadDate.ToString("dd.MM.yyyy")</span>
+                    <span>Rating: @averageRating</span>
+                </div>
+                <div class="d-flex gap-2 mt-3">
+                    <a asp-page="./Details" asp-route-id="@item.Id" class="btn btn-sm btn-primary">Open</a>
+                    @if (!string.IsNullOrWhiteSpace(item.FilePath))
+                    {
+                        <a href="@item.FilePath" class="btn btn-sm btn-outline-secondary" target="_blank">File</a>
+                    }
+                </div>
+            </article>
+        }
+    </div>
+}
