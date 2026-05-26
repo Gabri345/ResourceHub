@@ -251,7 +251,7 @@ namespace ResourceHub.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Resources");
+                    b.ToTable("Resources", (string)null);
                 });
 
             modelBuilder.Entity("ResourceHub.Models.ResourceComment", b =>
