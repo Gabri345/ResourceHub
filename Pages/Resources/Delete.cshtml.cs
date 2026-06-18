@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
@@ -10,13 +8,16 @@ using ResourceHub.Models;
 
 namespace ResourceHub.Pages.Resources
 {
+    [Authorize]
     public class DeleteModel : PageModel
     {
-        private readonly ResourceHub.Data.ApplicationDbContext _context;
+        private readonly ApplicationDbContext _context;
+        private readonly IWebHostEnvironment _environment;
 
-        public DeleteModel(ResourceHub.Data.ApplicationDbContext context)
+        public DeleteModel(ApplicationDbContext context, IWebHostEnvironment environment)
         {
             _context = context;
+            _environment = environment;
         }
 
         [BindProperty]
@@ -30,15 +31,18 @@ namespace ResourceHub.Pages.Resources
             }
 
             var resource = await _context.Resources.FirstOrDefaultAsync(m => m.Id == id);
-
-            if (resource is not null)
+            if (resource is null)
             {
-                Resource = resource;
-
-                return Page();
+                return NotFound();
             }
 
-            return NotFound();
+            if (!IsCurrentUserOwner(resource))
+            {
+                return Forbid();
+            }
+
+            Resource = resource;
+            return Page();
         }
 
         public async Task<IActionResult> OnPostAsync(int? id)
@@ -49,14 +53,43 @@ namespace ResourceHub.Pages.Resources
             }
 
             var resource = await _context.Resources.FindAsync(id);
-            if (resource != null)
+            if (resource is null)
             {
-                Resource = resource;
-                _context.Resources.Remove(Resource);
-                await _context.SaveChangesAsync();
+                return NotFound();
             }
 
+            if (!IsCurrentUserOwner(resource))
+            {
+                return Forbid();
+            }
+
+            DeleteUploadedFile(resource);
+            _context.Resources.Remove(resource);
+            await _context.SaveChangesAsync();
+
             return RedirectToPage("./Index");
+        }
+
+        private bool IsCurrentUserOwner(Resource resource)
+        {
+            return resource.UploaderId == User.FindFirstValue(ClaimTypes.NameIdentifier);
+        }
+
+        private void DeleteUploadedFile(Resource resource)
+        {
+            if (string.IsNullOrWhiteSpace(resource.FilePath))
+            {
+                return;
+            }
+
+            var fileName = Path.GetFileName(resource.FilePath);
+            var uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads");
+            var fullPath = Path.Combine(uploadsFolder, fileName);
+
+            if (System.IO.File.Exists(fullPath))
+            {
+                System.IO.File.Delete(fullPath);
+            }
         }
     }
 }

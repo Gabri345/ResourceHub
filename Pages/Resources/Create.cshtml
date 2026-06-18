@@ -9,7 +9,7 @@
     <div>
         <p class="text-uppercase text-muted small mb-1">ResourceHub</p>
         <h1>Upload a resource</h1>
-        <p class="text-muted mb-0">Add plans, images, informatics files, homework examples or other useful study material.</p>
+        <p class="text-muted mb-0">Add study material and connect it to the right school subject.</p>
     </div>
 </div>
 
@@ -25,14 +25,11 @@
     <div class="mb-3">
         <label asp-for="Resource.Category" class="form-label"></label>
         <select asp-for="Resource.Category" class="form-select">
-            <option value="">Choose category</option>
-            <option>Informatics</option>
-            <option>Plans</option>
-            <option>Images</option>
-            <option>Presentations</option>
-            <option>Homework</option>
-            <option>Projects</option>
-            <option>Other</option>
+            <option value="">Choose subject</option>
+            @foreach (var category in Model.Categories)
+            {
+                <option value="@category">@category</option>
+            }
         </select>
         <span asp-validation-for="Resource.Category" class="text-danger"></span>
     </div>

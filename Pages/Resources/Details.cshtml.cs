@@ -33,6 +33,15 @@ namespace ResourceHub.Pages.Resources
 
         public double? AverageRating { get; set; }
 
+        public ResourceRating? CurrentUserRating { get; set; }
+
+        public bool CurrentUserHasReported { get; set; }
+
+        public bool CanDeleteResource { get; set; }
+
+        [TempData]
+        public string? StatusMessage { get; set; }
+
         public async Task<IActionResult> OnGetAsync(int? id)
         {
             if (id == null)
@@ -63,14 +72,33 @@ namespace ResourceHub.Pages.Resources
 
         public async Task<IActionResult> OnPostRatingAsync(int id)
         {
+            if (!User.Identity?.IsAuthenticated ?? true)
+            {
+                return RedirectToLogin(id);
+            }
+
             if (RatingValue is >= 1 and <= 5)
             {
-                _context.ResourceRatings.Add(new ResourceRating
+                var userId = CurrentUserId();
+                var existingRating = await _context.ResourceRatings
+                    .FirstOrDefaultAsync(r => r.ResourceId == id && r.UserId == userId);
+
+                if (existingRating is null)
                 {
-                    ResourceId = id,
-                    Value = RatingValue,
-                    UserId = CurrentUserId()
-                });
+                    _context.ResourceRatings.Add(new ResourceRating
+                    {
+                        ResourceId = id,
+                        Value = RatingValue,
+                        UserId = userId
+                    });
+
+                    StatusMessage = "Your rating was saved.";
+                }
+                else
+                {
+                    existingRating.Value = RatingValue;
+                    StatusMessage = "Your existing rating was updated.";
+                }
 
                 await _context.SaveChangesAsync();
             }
@@ -80,16 +108,32 @@ namespace ResourceHub.Pages.Resources
 
         public async Task<IActionResult> OnPostReportAsync(int id)
         {
+            if (!User.Identity?.IsAuthenticated ?? true)
+            {
+                return RedirectToLogin(id);
+            }
+
             if (!string.IsNullOrWhiteSpace(ReportReason))
             {
+                var userId = CurrentUserId();
+                var alreadyReported = await _context.ResourceReports
+                    .AnyAsync(r => r.ResourceId == id && r.UserId == userId);
+
+                if (alreadyReported)
+                {
+                    StatusMessage = "You have already reported this resource.";
+                    return RedirectToPage(new { id });
+                }
+
                 _context.ResourceReports.Add(new ResourceReport
                 {
                     ResourceId = id,
                     Reason = ReportReason.Trim(),
-                    UserId = CurrentUserId()
+                    UserId = userId
                 });
 
                 await _context.SaveChangesAsync();
+                StatusMessage = "Your report was sent.";
             }
 
             return RedirectToPage(new { id });
@@ -110,12 +154,28 @@ namespace ResourceHub.Pages.Resources
 
             Resource = resource;
             AverageRating = resource.Ratings.Any() ? resource.Ratings.Average(r => r.Value) : null;
+
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                var userId = CurrentUserId();
+                CurrentUserRating = resource.Ratings.FirstOrDefault(r => r.UserId == userId);
+                CurrentUserHasReported = resource.Reports.Any(r => r.UserId == userId);
+                CanDeleteResource = resource.UploaderId == userId;
+                RatingValue = CurrentUserRating?.Value ?? 5;
+            }
+
             return true;
         }
 
         private string CurrentUserId()
         {
             return User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "Anonymous";
+        }
+
+        private IActionResult RedirectToLogin(int id)
+        {
+            var returnUrl = Url.Page("./Details", new { id }) ?? $"/Resources/Details/{id}";
+            return RedirectToPage("/Account/Login", new { area = "Identity", returnUrl });
         }
     }
 }

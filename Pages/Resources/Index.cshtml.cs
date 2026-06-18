@@ -20,6 +20,8 @@ namespace ResourceHub.Pages.Resources
 
         public string? Category { get; set; }
 
+        public IReadOnlyList<string> Categories { get; } = ResourceCategories.SchoolSubjects;
+
         public async Task OnGetAsync(string? searchTerm, string? category)
         {
             SearchTerm = searchTerm;
@@ -38,7 +40,7 @@ namespace ResourceHub.Pages.Resources
                     r.Category.Contains(searchTerm));
             }
 
-            if (!string.IsNullOrWhiteSpace(category))
+            if (!string.IsNullOrWhiteSpace(category) && Categories.Contains(category))
             {
                 query = query.Where(r => r.Category == category);
             }

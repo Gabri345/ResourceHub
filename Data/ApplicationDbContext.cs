@@ -13,5 +13,18 @@ namespace ResourceHub.Data
         public DbSet<ResourceRating> ResourceRatings { get; set; }
 
         public DbSet<ResourceReport> ResourceReports { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            base.OnModelCreating(builder);
+
+            builder.Entity<ResourceRating>()
+                .HasIndex(r => new { r.ResourceId, r.UserId })
+                .IsUnique();
+
+            builder.Entity<ResourceReport>()
+                .HasIndex(r => new { r.ResourceId, r.UserId })
+                .IsUnique();
+        }
     }
 }

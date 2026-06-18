@@ -11,7 +11,13 @@
         <h1>@Model.Resource.Title</h1>
         <p class="text-muted mb-0">Uploaded on @Model.Resource.UploadDate.ToString("dd.MM.yyyy HH:mm")</p>
     </div>
-    <a asp-page="./Index" class="btn btn-outline-secondary">Back</a>
+    <div class="d-flex gap-2">
+        @if (Model.CanDeleteResource)
+        {
+            <a asp-page="./Delete" asp-route-id="@Model.Resource.Id" class="btn btn-outline-danger">Delete</a>
+        }
+        <a asp-page="./Index" class="btn btn-outline-secondary">Back</a>
+    </div>
 </div>
 
 <section class="resource-detail">
@@ -41,9 +47,14 @@
     </aside>
 </section>
 
+@if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+{
+    <div class="alert alert-info">@Model.StatusMessage</div>
+}
+
 <section class="interaction-grid">
     <form method="post" asp-page-handler="Rating" asp-route-id="@Model.Resource.Id" class="interaction-panel">
-        <h2>Rate this resource</h2>
+        <h2>@(Model.CurrentUserRating is null ? "Rate this resource" : "Update your rating")</h2>
         <select asp-for="RatingValue" class="form-select">
             <option value="5">5 - Excellent</option>
             <option value="4">4 - Useful</option>
@@ -51,13 +62,28 @@
             <option value="2">2 - Needs work</option>
             <option value="1">1 - Not useful</option>
         </select>
-        <button type="submit" class="btn btn-primary mt-3">Submit rating</button>
+        <button type="submit" class="btn btn-primary mt-3">@(Model.CurrentUserRating is null ? "Submit rating" : "Update rating")</button>
+        @if (!User.Identity?.IsAuthenticated ?? true)
+        {
+            <p class="text-muted mt-2 mb-0">Login is required to rate.</p>
+        }
     </form>
 
     <form method="post" asp-page-handler="Report" asp-route-id="@Model.Resource.Id" class="interaction-panel">
         <h2>Report false information</h2>
-        <textarea asp-for="ReportReason" class="form-control" rows="4" placeholder="Explain what is wrong or misleading."></textarea>
-        <button type="submit" class="btn btn-outline-danger mt-3">Send report</button>
+        @if (Model.CurrentUserHasReported)
+        {
+            <p class="text-muted mb-0">You have already reported this resource.</p>
+        }
+        else
+        {
+            <textarea asp-for="ReportReason" class="form-control" rows="4" placeholder="Explain what is wrong or misleading."></textarea>
+            <button type="submit" class="btn btn-outline-danger mt-3">Send report</button>
+            @if (!User.Identity?.IsAuthenticated ?? true)
+            {
+                <p class="text-muted mt-2 mb-0">Login is required to report.</p>
+            }
+        }
     </form>
 </section>
 

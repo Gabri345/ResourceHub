@@ -37,7 +37,13 @@
             </div>
             <div class="form-group">
                 <label asp-for="Resource.Category" class="control-label"></label>
-                <input asp-for="Resource.Category" class="form-control" />
+                <select asp-for="Resource.Category" class="form-select">
+                    <option value="">Choose subject</option>
+                    @foreach (var category in Model.Categories)
+                    {
+                        <option value="@category">@category</option>
+                    }
+                </select>
                 <span asp-validation-for="Resource.Category" class="text-danger"></span>
             </div>
             <div class="form-group">

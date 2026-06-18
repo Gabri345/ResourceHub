@@ -23,6 +23,8 @@ namespace ResourceHub.Pages.Resources
         [BindProperty]
         public IFormFile? UploadFile { get; set; }
 
+        public IReadOnlyList<string> Categories { get; } = ResourceCategories.SchoolSubjects;
+
         public IActionResult OnGet()
         {
             return Page();

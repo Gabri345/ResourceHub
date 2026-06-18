@@ -23,6 +23,8 @@ namespace ResourceHub.Pages.Resources
         [BindProperty]
         public Resource Resource { get; set; } = default!;
 
+        public IReadOnlyList<string> Categories { get; } = ResourceCategories.SchoolSubjects;
+
         public async Task<IActionResult> OnGetAsync(int? id)
         {
             if (id == null)
