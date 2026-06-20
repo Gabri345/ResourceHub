@@ -14,6 +14,8 @@ namespace ResourceHub.Data
 
         public DbSet<ResourceReport> ResourceReports { get; set; }
 
+        public DbSet<ResourceFavorite> ResourceFavorites { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -24,6 +26,10 @@ namespace ResourceHub.Data
 
             builder.Entity<ResourceReport>()
                 .HasIndex(r => new { r.ResourceId, r.UserId })
+                .IsUnique();
+
+            builder.Entity<ResourceFavorite>()
+                .HasIndex(f => new { f.ResourceId, f.UserId })
                 .IsUnique();
         }
     }

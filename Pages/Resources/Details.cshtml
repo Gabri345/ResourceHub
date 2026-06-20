@@ -16,6 +16,11 @@
         {
             <a asp-page="./Delete" asp-route-id="@Model.Resource.Id" class="btn btn-outline-danger">Delete</a>
         }
+        <form method="post" asp-page-handler="ToggleFavorite" asp-route-id="@Model.Resource.Id">
+            <button type="submit" class="btn @(Model.IsFavorite ? "btn-warning" : "btn-outline-primary")">
+                @(Model.IsFavorite ? "Saved" : "Save")
+            </button>
+        </form>
         <a asp-page="./Index" class="btn btn-outline-secondary">Back</a>
     </div>
 </div>

@@ -39,6 +39,8 @@ namespace ResourceHub.Pages.Resources
 
         public bool CanDeleteResource { get; set; }
 
+        public bool IsFavorite { get; set; }
+
         [TempData]
         public string? StatusMessage { get; set; }
 
@@ -139,6 +141,41 @@ namespace ResourceHub.Pages.Resources
             return RedirectToPage(new { id });
         }
 
+        public async Task<IActionResult> OnPostToggleFavoriteAsync(int id)
+        {
+            if (!User.Identity?.IsAuthenticated ?? true)
+            {
+                return RedirectToLogin(id);
+            }
+
+            var userId = CurrentUserId();
+            var favorite = await _context.ResourceFavorites
+                .FirstOrDefaultAsync(f => f.ResourceId == id && f.UserId == userId);
+
+            if (favorite is null)
+            {
+                var resourceExists = await _context.Resources.AnyAsync(r => r.Id == id);
+                if (resourceExists)
+                {
+                    _context.ResourceFavorites.Add(new ResourceFavorite
+                    {
+                        ResourceId = id,
+                        UserId = userId
+                    });
+
+                    StatusMessage = "Resource saved to your favorites.";
+                }
+            }
+            else
+            {
+                _context.ResourceFavorites.Remove(favorite);
+                StatusMessage = "Resource removed from your favorites.";
+            }
+
+            await _context.SaveChangesAsync();
+            return RedirectToPage(new { id });
+        }
+
         private async Task<bool> LoadResourceAsync(int id)
         {
             var resource = await _context.Resources
@@ -161,6 +198,8 @@ namespace ResourceHub.Pages.Resources
                 CurrentUserRating = resource.Ratings.FirstOrDefault(r => r.UserId == userId);
                 CurrentUserHasReported = resource.Reports.Any(r => r.UserId == userId);
                 CanDeleteResource = resource.UploaderId == userId;
+                IsFavorite = await _context.ResourceFavorites
+                    .AnyAsync(f => f.ResourceId == id && f.UserId == userId);
                 RatingValue = CurrentUserRating?.Value ?? 5;
             }
 

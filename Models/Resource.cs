@@ -33,5 +33,7 @@ namespace ResourceHub.Models
         public ICollection<ResourceRating> Ratings { get; set; } = new List<ResourceRating>();
 
         public ICollection<ResourceReport> Reports { get; set; } = new List<ResourceReport>();
+
+        public ICollection<ResourceFavorite> Favorites { get; set; } = new List<ResourceFavorite>();
     }
 }

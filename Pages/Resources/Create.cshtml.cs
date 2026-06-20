@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using ResourceHub.Data;
@@ -6,6 +7,7 @@ using ResourceHub.Models;
 
 namespace ResourceHub.Pages.Resources
 {
+    [Authorize]
     public class CreateModel : PageModel
     {
         private readonly ApplicationDbContext _context;
@@ -54,7 +56,7 @@ namespace ResourceHub.Pages.Resources
             }
 
             Resource.UploadDate = DateTime.Now;
-            Resource.UploaderId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "Anonymous";
+            Resource.UploaderId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
 
             _context.Resources.Add(Resource);
             await _context.SaveChangesAsync();
