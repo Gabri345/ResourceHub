@@ -92,6 +92,65 @@ body {
   flex: 1;
 }
 
+.resource-file {
+  align-items: center;
+  background: #f1f4f8;
+  border: 1px solid #e3e7ef;
+  border-radius: 8px;
+  display: flex;
+  gap: .75rem;
+  margin: .75rem 0 1rem;
+  min-height: 72px;
+  padding: .65rem;
+}
+
+.resource-file--missing {
+  border-style: dashed;
+  color: #687589;
+}
+
+.resource-file strong,
+.resource-file span {
+  display: block;
+}
+
+.resource-file strong {
+  font-size: .95rem;
+  overflow-wrap: anywhere;
+}
+
+.resource-file span {
+  color: #687589;
+  font-size: .85rem;
+}
+
+.resource-file__thumb,
+.resource-file__icon {
+  border-radius: 6px;
+  flex: 0 0 56px;
+  height: 56px;
+  width: 56px;
+}
+
+.resource-file__thumb {
+  background: #fff;
+  border: 1px solid #d7dde7;
+  object-fit: cover;
+}
+
+.resource-file__icon {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #d7dde7;
+  color: #1c2430;
+  display: flex;
+  font-size: .78rem;
+  font-weight: 700;
+  justify-content: center;
+  padding: .25rem;
+  text-align: center;
+}
+
 .resource-meta {
   color: #687589;
   display: flex;
@@ -115,6 +174,61 @@ body {
 .resource-detail aside {
   display: grid;
   gap: .75rem;
+}
+
+.file-preview {
+  border-top: 1px solid #e3e7ef;
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+}
+
+.file-preview__header {
+  align-items: flex-start;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.file-preview__image {
+  background: #f1f4f8;
+  border: 1px solid #e3e7ef;
+  border-radius: 8px;
+  display: block;
+  max-height: 620px;
+  object-fit: contain;
+  width: 100%;
+}
+
+.file-preview__frame {
+  background: #fff;
+  border: 1px solid #d7dde7;
+  border-radius: 8px;
+  height: 680px;
+  width: 100%;
+}
+
+.file-preview__text {
+  background: #111827;
+  border-radius: 8px;
+  color: #e5e7eb;
+  font-size: .92rem;
+  max-height: 620px;
+  overflow: auto;
+  padding: 1rem;
+  white-space: pre-wrap;
+}
+
+.file-preview__empty {
+  background: #f1f4f8;
+  border: 1px dashed #bac5d3;
+  border-radius: 8px;
+  padding: 1.25rem;
+}
+
+.file-preview__empty h3 {
+  font-size: 1rem;
+  margin-bottom: .35rem;
 }
 
 .stat-box {
@@ -188,6 +302,7 @@ body {
 
 @media (max-width: 720px) {
   .page-heading,
+  .file-preview__header,
   .resource-toolbar,
   .resource-detail {
     display: grid;

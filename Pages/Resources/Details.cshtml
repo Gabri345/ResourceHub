@@ -21,7 +21,40 @@
 
         @if (!string.IsNullOrWhiteSpace(Model.Resource.FilePath))
         {
-            <a href="@Model.Resource.FilePath" target="_blank" class="btn btn-primary">Open file</a>
+            <div class="file-preview">
+                <div class="file-preview__header">
+                    <div>
+                        <h2>File preview</h2>
+                        <p class="text-muted mb-0">@Model.Resource.FileName</p>
+                    </div>
+                    <a href="@Model.Resource.FilePath" target="_blank" class="btn btn-outline-primary">Open in new tab</a>
+                </div>
+
+                @switch (Model.PreviewKind)
+                {
+                    case "image":
+                        <img src="@Model.Resource.FilePath" alt="@Model.Resource.Title" class="file-preview__image" />
+                        break;
+                    case "pdf":
+                        <iframe src="@Model.Resource.FilePath" title="@Model.Resource.Title" class="file-preview__frame"></iframe>
+                        break;
+                    case "text":
+                        <pre class="file-preview__text"><code>@Model.PreviewText</code></pre>
+                        break;
+                    case "unsupported":
+                        <div class="file-preview__empty">
+                            <h3>Preview is not available for this file type</h3>
+                            <p>Use the button above to open the file. Some document formats, like Word or PowerPoint, cannot be previewed directly by the browser.</p>
+                        </div>
+                        break;
+                    default:
+                        <div class="file-preview__empty">
+                            <h3>No file preview</h3>
+                            <p>This resource does not have a file attached.</p>
+                        </div>
+                        break;
+                }
+            </div>
         }
     </div>
 

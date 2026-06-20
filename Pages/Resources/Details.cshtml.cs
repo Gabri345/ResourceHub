@@ -11,13 +11,21 @@ namespace ResourceHub.Pages.Resources
     public class DetailsModel : PageModel
     {
         private readonly ApplicationDbContext _context;
+        private readonly IWebHostEnvironment _environment;
 
-        public DetailsModel(ApplicationDbContext context)
+        public DetailsModel(ApplicationDbContext context, IWebHostEnvironment environment)
         {
             _context = context;
+            _environment = environment;
         }
 
         public Resource Resource { get; set; } = default!;
+
+        public string PreviewKind { get; set; } = "none";
+
+        public string? PreviewText { get; set; }
+
+        public string FileExtension { get; set; } = string.Empty;
 
         [BindProperty]
         [StringLength(700)]
@@ -110,7 +118,73 @@ namespace ResourceHub.Pages.Resources
 
             Resource = resource;
             AverageRating = resource.Ratings.Any() ? resource.Ratings.Average(r => r.Value) : null;
+            await PreparePreviewAsync(resource);
             return true;
+        }
+
+        private async Task PreparePreviewAsync(Resource resource)
+        {
+            if (string.IsNullOrWhiteSpace(resource.FilePath))
+            {
+                PreviewKind = "none";
+                return;
+            }
+
+            FileExtension = Path.GetExtension(resource.FileName).ToLowerInvariant();
+
+            if (IsImage(FileExtension))
+            {
+                PreviewKind = "image";
+                return;
+            }
+
+            if (FileExtension == ".pdf")
+            {
+                PreviewKind = "pdf";
+                return;
+            }
+
+            if (IsTextFile(FileExtension))
+            {
+                PreviewKind = "text";
+                PreviewText = await ReadPreviewTextAsync(resource.FilePath);
+                return;
+            }
+
+            PreviewKind = "unsupported";
+        }
+
+        private async Task<string> ReadPreviewTextAsync(string filePath)
+        {
+            var relativePath = filePath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
+            var fullPath = Path.GetFullPath(Path.Combine(_environment.WebRootPath, relativePath));
+            var webRoot = Path.GetFullPath(_environment.WebRootPath);
+
+            if (!fullPath.StartsWith(webRoot, StringComparison.OrdinalIgnoreCase) || !System.IO.File.Exists(fullPath))
+            {
+                return "File preview is not available.";
+            }
+
+            const int maxPreviewBytes = 200 * 1024;
+            await using var stream = System.IO.File.OpenRead(fullPath);
+            using var reader = new StreamReader(stream);
+            var buffer = new char[maxPreviewBytes];
+            var read = await reader.ReadBlockAsync(buffer, 0, buffer.Length);
+            var text = new string(buffer, 0, read);
+
+            return stream.Length > maxPreviewBytes
+                ? text + Environment.NewLine + Environment.NewLine + "... Preview shortened because the file is large."
+                : text;
+        }
+
+        private static bool IsImage(string extension)
+        {
+            return extension is ".jpg" or ".jpeg" or ".png" or ".gif" or ".webp" or ".bmp";
+        }
+
+        private static bool IsTextFile(string extension)
+        {
+            return extension is ".txt" or ".cs" or ".html" or ".htm" or ".css" or ".js" or ".json" or ".xml" or ".md" or ".csv" or ".sql" or ".py" or ".java" or ".cpp" or ".c" or ".h";
         }
 
         private string CurrentUserId()
