@@ -1,66 +1,54 @@
-﻿@page
+@page
 @model ResourceHub.Pages.Resources.EditModel
 
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Edit resource";
 }
 
-<h1>Edit</h1>
-
-<h4>Resource</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form method="post">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="Resource.Id" />
-            <div class="form-group">
-<span class="text-danger">*</span>
-                <label asp-for="Resource.Title" class="control-label"></label>
-                <input asp-for="Resource.Title" class="form-control" aria-required="true"/>
-                <span asp-validation-for="Resource.Title" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Resource.Description" class="control-label"></label>
-                <input asp-for="Resource.Description" class="form-control" />
-                <span asp-validation-for="Resource.Description" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Resource.FileName" class="control-label"></label>
-                <input asp-for="Resource.FileName" class="form-control" />
-                <span asp-validation-for="Resource.FileName" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Resource.UploadDate" class="control-label"></label>
-                <input asp-for="Resource.UploadDate" class="form-control" />
-                <span asp-validation-for="Resource.UploadDate" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Resource.Category" class="control-label"></label>
-                <select asp-for="Resource.Category" class="form-select">
-                    <option value="">Choose subject</option>
-                    @foreach (var category in Model.Categories)
-                    {
-                        <option value="@category">@category</option>
-                    }
-                </select>
-                <span asp-validation-for="Resource.Category" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Resource.UploaderId" class="control-label"></label>
-                <input asp-for="Resource.UploaderId" class="form-control" />
-                <span asp-validation-for="Resource.UploaderId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
-            </div>
-        </form>
+<div class="page-heading">
+    <div>
+        <p class="text-uppercase text-muted font-monospace small mb-1 fw-bold" style="letter-spacing: 0.5px;">ResourceHub</p>
+        <h1>Edit Resource</h1>
+        <p class="text-muted mb-0">Update the details or subject for this study resource.</p>
     </div>
 </div>
 
-<div>
-    <a asp-page="./Index">Back to List</a>
-</div>
+<form method="post" class="resource-form mx-auto shadow-sm">
+    <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+    <input type="hidden" asp-for="Resource.Id" />
+    <input type="hidden" asp-for="Resource.UploaderId" />
+    <input type="hidden" asp-for="Resource.UploadDate" />
+    <input type="hidden" asp-for="Resource.FileName" />
+
+    <div class="mb-3">
+        <label asp-for="Resource.Title" class="form-label">Title</label>
+        <input asp-for="Resource.Title" class="form-control" placeholder="Example: C# arrays exercise plan" />
+        <span asp-validation-for="Resource.Title" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Resource.Category" class="form-label">Subject</label>
+        <select asp-for="Resource.Category" class="form-select">
+            <option value="">Choose subject</option>
+            @foreach (var category in Model.Categories)
+            {
+                <option value="@category">@category</option>
+            }
+        </select>
+        <span asp-validation-for="Resource.Category" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Resource.Description" class="form-label">Description</label>
+        <textarea asp-for="Resource.Description" class="form-control" rows="5" placeholder="Describe what the resource contains and when it is useful."></textarea>
+        <span asp-validation-for="Resource.Description" class="text-danger"></span>
+    </div>
+
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary px-4">Save changes</button>
+        <a asp-page="./Details" asp-route-id="@Model.Resource.Id" class="btn btn-outline-secondary px-4">Cancel</a>
+    </div>
+</form>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}

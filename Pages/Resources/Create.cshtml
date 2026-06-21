@@ -7,23 +7,23 @@
 
 <div class="page-heading">
     <div>
-        <p class="text-uppercase text-muted small mb-1">ResourceHub</p>
+        <p class="text-uppercase text-muted font-monospace small mb-1 fw-bold" style="letter-spacing: 0.5px;">ResourceHub</p>
         <h1>Upload a resource</h1>
         <p class="text-muted mb-0">Add study material and connect it to the right school subject.</p>
     </div>
 </div>
 
-<form method="post" enctype="multipart/form-data" class="resource-form">
-    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+<form method="post" enctype="multipart/form-data" class="resource-form mx-auto shadow-sm">
+    <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
 
     <div class="mb-3">
-        <label asp-for="Resource.Title" class="form-label"></label>
+        <label asp-for="Resource.Title" class="form-label">Title</label>
         <input asp-for="Resource.Title" class="form-control" placeholder="Example: C# arrays exercise plan" />
         <span asp-validation-for="Resource.Title" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
-        <label asp-for="Resource.Category" class="form-label"></label>
+        <label asp-for="Resource.Category" class="form-label">Subject</label>
         <select asp-for="Resource.Category" class="form-select">
             <option value="">Choose subject</option>
             @foreach (var category in Model.Categories)
@@ -35,7 +35,7 @@
     </div>
 
     <div class="mb-3">
-        <label asp-for="Resource.Description" class="form-label"></label>
+        <label asp-for="Resource.Description" class="form-label">Description</label>
         <textarea asp-for="Resource.Description" class="form-control" rows="5" placeholder="Describe what the resource contains and when it is useful."></textarea>
         <span asp-validation-for="Resource.Description" class="text-danger"></span>
     </div>
@@ -46,11 +46,12 @@
     </div>
 
     <div class="d-flex gap-2">
-        <button type="submit" class="btn btn-primary">Publish resource</button>
-        <a asp-page="Index" class="btn btn-outline-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary px-4">Publish resource</button>
+        <a asp-page="Index" class="btn btn-outline-secondary px-4">Cancel</a>
     </div>
 </form>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
 }
+

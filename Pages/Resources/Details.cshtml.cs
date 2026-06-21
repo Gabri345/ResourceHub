@@ -11,10 +11,12 @@ namespace ResourceHub.Pages.Resources
     public class DetailsModel : PageModel
     {
         private readonly ApplicationDbContext _context;
+        private readonly IWebHostEnvironment _environment;
 
-        public DetailsModel(ApplicationDbContext context)
+        public DetailsModel(ApplicationDbContext context, IWebHostEnvironment environment)
         {
             _context = context;
+            _environment = environment;
         }
 
         public Resource Resource { get; set; } = default!;
@@ -40,6 +42,10 @@ namespace ResourceHub.Pages.Resources
         public bool CanDeleteResource { get; set; }
 
         public bool IsFavorite { get; set; }
+
+        public string PreviewKind { get; set; } = "none";
+
+        public string? PreviewText { get; set; }
 
         [TempData]
         public string? StatusMessage { get; set; }
@@ -191,6 +197,7 @@ namespace ResourceHub.Pages.Resources
 
             Resource = resource;
             AverageRating = resource.Ratings.Any() ? resource.Ratings.Average(r => r.Value) : null;
+            await LoadPreviewAsync(resource);
 
             if (User.Identity?.IsAuthenticated == true)
             {
@@ -204,6 +211,50 @@ namespace ResourceHub.Pages.Resources
             }
 
             return true;
+        }
+
+        private async Task LoadPreviewAsync(Resource resource)
+        {
+            if (string.IsNullOrWhiteSpace(resource.FilePath))
+            {
+                PreviewKind = "none";
+                return;
+            }
+
+            var extension = Path.GetExtension(resource.FileName).ToLowerInvariant();
+            var imageExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp" };
+            var textExtensions = new[] { ".txt", ".csv", ".json", ".xml", ".html", ".css", ".js", ".cs", ".md" };
+
+            if (imageExtensions.Contains(extension))
+            {
+                PreviewKind = "image";
+                return;
+            }
+
+            if (extension == ".pdf")
+            {
+                PreviewKind = "pdf";
+                return;
+            }
+
+            if (!textExtensions.Contains(extension))
+            {
+                PreviewKind = "unsupported";
+                return;
+            }
+
+            var fileName = Path.GetFileName(resource.FilePath);
+            var fullPath = Path.Combine(_environment.WebRootPath, "uploads", fileName);
+
+            if (!System.IO.File.Exists(fullPath))
+            {
+                PreviewKind = "unsupported";
+                return;
+            }
+
+            PreviewKind = "text";
+            var text = await System.IO.File.ReadAllTextAsync(fullPath);
+            PreviewText = text.Length > 8000 ? text[..8000] + Environment.NewLine + "... preview truncated ..." : text;
         }
 
         private string CurrentUserId()

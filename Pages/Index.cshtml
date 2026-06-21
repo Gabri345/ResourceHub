@@ -4,14 +4,26 @@
     ViewData["Title"] = "Home";
 }
 
-<section class="home-hero">
-    <div>
-        <p class="text-uppercase text-muted small mb-2">ResourceHub</p>
-        <h1>Share and discover useful study resources.</h1>
-        <p>Collect plans, informatics files, images, homework examples and project materials in one searchable place.</p>
-        <div class="d-flex flex-wrap gap-2">
-            <a asp-page="/Resources/Index" class="btn btn-primary">Browse resources</a>
-            <a asp-page="/Resources/Create" class="btn btn-outline-secondary">Upload resource</a>
+<section class="home-hero d-flex align-items-center">
+    <div class="container py-5">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-white border border-light shadow-sm mb-4">
+                    <span class="badge rounded-circle p-1 bg-primary" style="width: 8px; height: 8px;"></span>
+                    <span class="text-uppercase font-monospace text-muted small fw-bold" style="letter-spacing: 1px;">ResourceHub Platform</span>
+                </div>
+                <h1 class="display-3 fw-extrabold mb-3">
+                    Share and <span>discover useful</span> study resources.
+                </h1>
+                <p class="lead text-muted mb-4 fs-5">
+                    Collect lesson plans, informatics files, homework examples, study cards, and project materials in one beautifully searchable place.
+                </p>
+                <div class="d-flex flex-wrap gap-3">
+                    <a asp-page="/Resources/Index" class="btn btn-lg btn-primary shadow-sm px-4">Browse resources</a>
+                    <a asp-page="/Resources/Create" class="btn btn-lg btn-outline-secondary px-4">Upload resource</a>
+                </div>
+            </div>
         </div>
     </div>
 </section>
+
