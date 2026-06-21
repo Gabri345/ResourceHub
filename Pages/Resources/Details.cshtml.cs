@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
@@ -12,11 +13,16 @@ namespace ResourceHub.Pages.Resources
     {
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _environment;
+        private readonly UserManager<IdentityUser> _userManager;
 
-        public DetailsModel(ApplicationDbContext context, IWebHostEnvironment environment)
+        public DetailsModel(
+            ApplicationDbContext context,
+            IWebHostEnvironment environment,
+            UserManager<IdentityUser> userManager)
         {
             _context = context;
             _environment = environment;
+            _userManager = userManager;
         }
 
         public Resource Resource { get; set; } = default!;
@@ -32,6 +38,13 @@ namespace ResourceHub.Pages.Resources
         [BindProperty]
         [StringLength(500)]
         public string? ReportReason { get; set; }
+
+        [BindProperty]
+        [Required]
+        [EmailAddress]
+        public string SharedEmail { get; set; } = string.Empty;
+
+        public List<SharedUserViewModel> SharedUsers { get; set; } = new();
 
         public double? AverageRating { get; set; }
 
@@ -54,10 +67,18 @@ namespace ResourceHub.Pages.Resources
 
         public async Task<IActionResult> OnGetDownloadAsync(int id)
         {
-            var resource = await _context.Resources.FindAsync(id);
+            var resource = await _context.Resources
+                .Include(r => r.Shares)
+                .FirstOrDefaultAsync(r => r.Id == id);
+
             if (resource == null || string.IsNullOrEmpty(resource.FilePath))
             {
                 return NotFound();
+            }
+
+            if (!CanAccess(resource))
+            {
+                return User.Identity?.IsAuthenticated == true ? Forbid() : RedirectToLogin(id);
             }
 
             var fileName = Path.GetFileName(resource.FilePath);
@@ -72,6 +93,86 @@ namespace ResourceHub.Pages.Resources
             var contentType = "application/octet-stream";
 
             return File(bytes, contentType, resource.FileName ?? fileName);
+        }
+
+        public async Task<IActionResult> OnPostAddShareAsync(int id)
+        {
+            if (!User.Identity?.IsAuthenticated ?? true)
+            {
+                return RedirectToLogin(id);
+            }
+
+            var resource = await FindOwnedPrivateResourceAsync(id);
+            if (resource is null)
+            {
+                return Forbid();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                StatusMessage = "Enter a valid email address.";
+                return RedirectToPage(new { id });
+            }
+
+            var targetUser = await _userManager.FindByEmailAsync(SharedEmail.Trim());
+            if (targetUser is null)
+            {
+                StatusMessage = "No registered user was found with that email address.";
+                return RedirectToPage(new { id });
+            }
+
+            if (targetUser.Id == resource.UploaderId)
+            {
+                StatusMessage = "You already own this resource.";
+                return RedirectToPage(new { id });
+            }
+
+            var alreadyShared = await _context.ResourceShares
+                .AnyAsync(s => s.ResourceId == id && s.SharedWithUserId == targetUser.Id);
+
+            if (alreadyShared)
+            {
+                StatusMessage = "This user already has access.";
+                return RedirectToPage(new { id });
+            }
+
+            _context.ResourceShares.Add(new ResourceShare
+            {
+                ResourceId = id,
+                SharedWithUserId = targetUser.Id
+            });
+
+            await _context.SaveChangesAsync();
+            StatusMessage = $"Access granted to {targetUser.Email}.";
+            return RedirectToPage(new { id });
+        }
+
+        public async Task<IActionResult> OnPostRemoveShareAsync(int id, int shareId)
+        {
+            if (!User.Identity?.IsAuthenticated ?? true)
+            {
+                return RedirectToLogin(id);
+            }
+
+            var resource = await FindOwnedPrivateResourceAsync(id);
+            if (resource is null)
+            {
+                return Forbid();
+            }
+
+            var share = await _context.ResourceShares
+                .FirstOrDefaultAsync(s => s.Id == shareId && s.ResourceId == resource.Id);
+
+            if (share is null)
+            {
+                StatusMessage = "That access entry no longer exists.";
+                return RedirectToPage(new { id });
+            }
+
+            _context.ResourceShares.Remove(share);
+            await _context.SaveChangesAsync();
+            StatusMessage = "Access removed.";
+            return RedirectToPage(new { id });
         }
 
         public async Task<IActionResult> OnGetAsync(int? id)
@@ -240,7 +341,48 @@ namespace ResourceHub.Pages.Resources
                 RatingValue = CurrentUserRating?.Value ?? 5;
             }
 
+            if (CanDeleteResource && resource.IsPrivate && resource.Shares.Count > 0)
+            {
+                var sharedUserIds = resource.Shares.Select(s => s.SharedWithUserId).ToList();
+                var emailsById = await _userManager.Users
+                    .Where(u => sharedUserIds.Contains(u.Id))
+                    .ToDictionaryAsync(u => u.Id, u => u.Email ?? u.UserName ?? "Unknown user");
+
+                SharedUsers = resource.Shares
+                    .Select(s => new SharedUserViewModel
+                    {
+                        ShareId = s.Id,
+                        Email = emailsById.GetValueOrDefault(s.SharedWithUserId, "Unknown user")
+                    })
+                    .OrderBy(s => s.Email)
+                    .ToList();
+            }
+
             return true;
+        }
+
+        private async Task<Resource?> FindOwnedPrivateResourceAsync(int id)
+        {
+            var userId = CurrentUserId();
+            return await _context.Resources
+                .FirstOrDefaultAsync(r => r.Id == id && r.IsPrivate && r.UploaderId == userId);
+        }
+
+        private bool CanAccess(Resource resource)
+        {
+            if (!resource.IsPrivate)
+            {
+                return true;
+            }
+
+            if (User.Identity?.IsAuthenticated != true)
+            {
+                return false;
+            }
+
+            var userId = CurrentUserId();
+            return resource.UploaderId == userId ||
+                   resource.Shares.Any(s => s.SharedWithUserId == userId);
         }
 
         private async Task LoadPreviewAsync(Resource resource)
@@ -328,6 +470,13 @@ namespace ResourceHub.Pages.Resources
         {
             var returnUrl = Url.Page("./Details", new { id }) ?? $"/Resources/Details/{id}";
             return RedirectToPage("/Account/Login", new { area = "Identity", returnUrl });
+        }
+
+        public class SharedUserViewModel
+        {
+            public int ShareId { get; set; }
+
+            public string Email { get; set; } = string.Empty;
         }
     }
 }

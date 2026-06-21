@@ -182,6 +182,51 @@
     <div class="alert alert-info shadow-sm rounded-3 mt-4">@Model.StatusMessage</div>
 }
 
+@if (Model.CanDeleteResource && Model.Resource.IsPrivate)
+{
+    <section class="interaction-panel mt-4">
+        <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+            <div>
+                <h2 class="h4 mb-1">Manage access</h2>
+                <p class="text-muted mb-0">Add or remove registered users who can open this private resource.</p>
+            </div>
+            <span class="badge private-badge">@Model.SharedUsers.Count shared</span>
+        </div>
+
+        <form method="post" asp-page-handler="AddShare" asp-route-id="@Model.Resource.Id" class="row g-2 align-items-start mb-4">
+            <div class="col-md">
+                <label asp-for="SharedEmail" class="form-label">User email</label>
+                <input asp-for="SharedEmail" class="form-control" placeholder="student@example.com" autocomplete="email" />
+            </div>
+            <div class="col-md-auto" style="padding-top: 2rem;">
+                <button type="submit" class="btn btn-primary">Grant access</button>
+            </div>
+        </form>
+
+        @if (Model.SharedUsers.Count == 0)
+        {
+            <p class="text-muted mb-0">Only you currently have access.</p>
+        }
+        else
+        {
+            <div class="d-flex flex-column gap-2">
+                @foreach (var sharedUser in Model.SharedUsers)
+                {
+                    <div class="d-flex justify-content-between align-items-center gap-3 border rounded p-3">
+                        <span class="text-break">@sharedUser.Email</span>
+                        <form method="post" asp-page-handler="RemoveShare"
+                              asp-route-id="@Model.Resource.Id"
+                              asp-route-shareId="@sharedUser.ShareId"
+                              class="m-0">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Remove access</button>
+                        </form>
+                    </div>
+                }
+            </div>
+        }
+    </section>
+}
+
 <section class="interaction-grid">
     <form method="post" asp-page-handler="Rating" asp-route-id="@Model.Resource.Id" class="interaction-panel">
         <h2>@(Model.CurrentUserRating is null ? "Rate this resource" : "Update your rating")</h2>
