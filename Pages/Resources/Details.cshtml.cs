@@ -47,8 +47,32 @@ namespace ResourceHub.Pages.Resources
 
         public string? PreviewText { get; set; }
 
+        public string FileSize { get; set; } = "";
+
         [TempData]
         public string? StatusMessage { get; set; }
+
+        public async Task<IActionResult> OnGetDownloadAsync(int id)
+        {
+            var resource = await _context.Resources.FindAsync(id);
+            if (resource == null || string.IsNullOrEmpty(resource.FilePath))
+            {
+                return NotFound();
+            }
+
+            var fileName = Path.GetFileName(resource.FilePath);
+            var fullPath = Path.Combine(_environment.WebRootPath, "uploads", fileName);
+
+            if (!System.IO.File.Exists(fullPath))
+            {
+                return NotFound();
+            }
+
+            var bytes = await System.IO.File.ReadAllBytesAsync(fullPath);
+            var contentType = "application/octet-stream";
+            
+            return File(bytes, contentType, resource.FileName ?? fileName);
+        }
 
         public async Task<IActionResult> OnGetAsync(int? id)
         {
@@ -221,9 +245,20 @@ namespace ResourceHub.Pages.Resources
                 return;
             }
 
-            var extension = Path.GetExtension(resource.FileName).ToLowerInvariant();
-            var imageExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp" };
-            var textExtensions = new[] { ".txt", ".csv", ".json", ".xml", ".html", ".css", ".js", ".cs", ".md" };
+            var fileName = Path.GetFileName(resource.FilePath);
+            var fullPath = Path.Combine(_environment.WebRootPath, "uploads", fileName);
+
+            if (System.IO.File.Exists(fullPath))
+            {
+                var fileInfo = new FileInfo(fullPath);
+                FileSize = FormatBytes(fileInfo.Length);
+            }
+
+            var extension = Path.GetExtension(resource.FileName ?? fileName).ToLowerInvariant();
+            var imageExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".svg" };
+            var textExtensions = new[] { ".txt", ".csv", ".json", ".xml", ".html", ".css", ".js", ".cs", ".md", ".sql", ".yaml", ".yml" };
+            var audioExtensions = new[] { ".mp3", ".wav", ".ogg", ".m4a", ".aac" };
+            var videoExtensions = new[] { ".mp4", ".webm", ".ogg", ".mov" };
 
             if (imageExtensions.Contains(extension))
             {
@@ -237,14 +272,23 @@ namespace ResourceHub.Pages.Resources
                 return;
             }
 
+            if (audioExtensions.Contains(extension))
+            {
+                PreviewKind = "audio";
+                return;
+            }
+
+            if (videoExtensions.Contains(extension))
+            {
+                PreviewKind = "video";
+                return;
+            }
+
             if (!textExtensions.Contains(extension))
             {
                 PreviewKind = "unsupported";
                 return;
             }
-
-            var fileName = Path.GetFileName(resource.FilePath);
-            var fullPath = Path.Combine(_environment.WebRootPath, "uploads", fileName);
 
             if (!System.IO.File.Exists(fullPath))
             {
@@ -255,6 +299,18 @@ namespace ResourceHub.Pages.Resources
             PreviewKind = "text";
             var text = await System.IO.File.ReadAllTextAsync(fullPath);
             PreviewText = text.Length > 8000 ? text[..8000] + Environment.NewLine + "... preview truncated ..." : text;
+        }
+
+        private string FormatBytes(long bytes)
+        {
+            string[] suffix = { "B", "KB", "MB", "GB" };
+            int i;
+            double dblSByte = bytes;
+            for (i = 0; i < suffix.Length && bytes >= 1024; i++, bytes /= 1024)
+            {
+                dblSByte = bytes / 1024.0;
+            }
+            return $"{dblSByte:0.##} {suffix[i]}";
         }
 
         private string CurrentUserId()

@@ -614,6 +614,71 @@ h1, h2, h3, h4, h5, h6, .navbar-brand {
   line-height: 70px;
 }
 
+/* File card for unsupported preview formats */
+.file-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3.5rem 2rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  text-align: center;
+  box-shadow: var(--card-shadow);
+  max-width: 520px;
+  margin: 2rem auto;
+  transition: var(--transition-smooth);
+}
+
+.file-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--card-shadow-hover);
+  border-color: rgba(99, 102, 241, 0.15);
+}
+
+.file-card__icon {
+  width: 80px;
+  height: 80px;
+  border-radius: var(--radius-md);
+  background: var(--primary-light);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.08);
+}
+
+.file-card__icon svg {
+  width: 38px;
+  height: 38px;
+}
+
+.file-card__name {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 0.5rem;
+  word-break: break-all;
+}
+
+.file-card__size {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-bottom: 2rem;
+}
+
+.file-card__actions {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
 @media (max-width: 768px) {
   .page-heading {
     flex-direction: column;
@@ -627,5 +692,13 @@ h1, h2, h3, h4, h5, h6, .navbar-brand {
   
   .resource-detail {
     grid-template-columns: 1fr;
+  }
+  
+  .file-card__actions {
+    flex-direction: column;
+  }
+  
+  .file-card__actions .btn {
+    width: 100%;
   }
 }
