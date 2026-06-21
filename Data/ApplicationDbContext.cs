@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using ResourceHub.Models;
 
@@ -16,6 +16,8 @@ namespace ResourceHub.Data
 
         public DbSet<ResourceFavorite> ResourceFavorites { get; set; }
 
+        public DbSet<ResourceShare> ResourceShares { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -30,6 +32,10 @@ namespace ResourceHub.Data
 
             builder.Entity<ResourceFavorite>()
                 .HasIndex(f => new { f.ResourceId, f.UserId })
+                .IsUnique();
+
+            builder.Entity<ResourceShare>()
+                .HasIndex(s => new { s.ResourceId, s.SharedWithUserId })
                 .IsUnique();
         }
     }

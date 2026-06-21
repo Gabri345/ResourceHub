@@ -70,7 +70,7 @@ namespace ResourceHub.Pages.Resources
 
             var bytes = await System.IO.File.ReadAllBytesAsync(fullPath);
             var contentType = "application/octet-stream";
-            
+
             return File(bytes, contentType, resource.FileName ?? fileName);
         }
 
@@ -208,13 +208,20 @@ namespace ResourceHub.Pages.Resources
 
         private async Task<bool> LoadResourceAsync(int id)
         {
+            var userId = CurrentUserId();
             var resource = await _context.Resources
                 .Include(r => r.Comments.OrderByDescending(c => c.CreatedOn))
                 .Include(r => r.Ratings)
                 .Include(r => r.Reports.OrderByDescending(rp => rp.CreatedOn))
+                .Include(r => r.Shares)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
             if (resource is null)
+            {
+                return false;
+            }
+
+            if (resource.IsPrivate && resource.UploaderId != userId && !resource.Shares.Any(s => s.SharedWithUserId == userId))
             {
                 return false;
             }
@@ -225,7 +232,6 @@ namespace ResourceHub.Pages.Resources
 
             if (User.Identity?.IsAuthenticated == true)
             {
-                var userId = CurrentUserId();
                 CurrentUserRating = resource.Ratings.FirstOrDefault(r => r.UserId == userId);
                 CurrentUserHasReported = resource.Reports.Any(r => r.UserId == userId);
                 CanDeleteResource = resource.UploaderId == userId;

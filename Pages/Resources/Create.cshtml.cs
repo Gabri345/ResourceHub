@@ -1,7 +1,9 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
 using ResourceHub.Data;
 using ResourceHub.Models;
 
@@ -12,11 +14,13 @@ namespace ResourceHub.Pages.Resources
     {
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _environment;
+        private readonly UserManager<IdentityUser> _userManager;
 
-        public CreateModel(ApplicationDbContext context, IWebHostEnvironment environment)
+        public CreateModel(ApplicationDbContext context, IWebHostEnvironment environment, UserManager<IdentityUser> userManager)
         {
             _context = context;
             _environment = environment;
+            _userManager = userManager;
         }
 
         [BindProperty]
@@ -24,6 +28,9 @@ namespace ResourceHub.Pages.Resources
 
         [BindProperty]
         public IFormFile? UploadFile { get; set; }
+
+        [BindProperty]
+        public List<string> SharedEmails { get; set; } = new();
 
         public IReadOnlyList<string> Categories { get; } = ResourceCategories.SchoolSubjects;
 
@@ -58,8 +65,38 @@ namespace ResourceHub.Pages.Resources
             Resource.UploadDate = DateTime.Now;
             Resource.UploaderId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
 
+            // Ensure folder has a default value when public
+            if (!Resource.IsPrivate || string.IsNullOrWhiteSpace(Resource.Folder))
+            {
+                Resource.Folder = "General";
+            }
+
             _context.Resources.Add(Resource);
             await _context.SaveChangesAsync();
+
+            // Handle sharing with users by email (only for private resources)
+            if (Resource.IsPrivate && SharedEmails.Count > 0)
+            {
+                foreach (var email in SharedEmails.Where(e => !string.IsNullOrWhiteSpace(e)).Distinct())
+                {
+                    var targetUser = await _userManager.FindByEmailAsync(email.Trim());
+                    if (targetUser != null && targetUser.Id != Resource.UploaderId)
+                    {
+                        var alreadyShared = await _context.ResourceShares
+                            .AnyAsync(s => s.ResourceId == Resource.Id && s.SharedWithUserId == targetUser.Id);
+
+                        if (!alreadyShared)
+                        {
+                            _context.ResourceShares.Add(new ResourceShare
+                            {
+                                ResourceId = Resource.Id,
+                                SharedWithUserId = targetUser.Id
+                            });
+                        }
+                    }
+                }
+                await _context.SaveChangesAsync();
+            }
 
             return RedirectToPage("./Details", new { id = Resource.Id });
         }

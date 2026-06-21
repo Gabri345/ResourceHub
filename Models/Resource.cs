@@ -28,6 +28,13 @@ namespace ResourceHub.Models
 
         public string UploaderId { get; set; } = string.Empty;
 
+        public bool IsPrivate { get; set; } = false;
+
+        [StringLength(100)]
+        public string Folder { get; set; } = "General";
+
+        public ICollection<ResourceShare> Shares { get; set; } = new List<ResourceShare>();
+
         public ICollection<ResourceComment> Comments { get; set; } = new List<ResourceComment>();
 
         public ICollection<ResourceRating> Ratings { get; set; } = new List<ResourceRating>();

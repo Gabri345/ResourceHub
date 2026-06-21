@@ -31,9 +31,13 @@ namespace ResourceHub.Pages.Resources
             SearchTerm = searchTerm;
             Category = category;
 
+            var userId = CurrentUserId();
+
             var query = _context.Resources
                 .Include(r => r.Ratings)
                 .Include(r => r.Reports)
+                .Include(r => r.Shares)
+                .Where(r => !r.IsPrivate || r.UploaderId == userId || r.Shares.Any(s => s.SharedWithUserId == userId))
                 .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(searchTerm))
@@ -55,7 +59,6 @@ namespace ResourceHub.Pages.Resources
 
             if (User.Identity?.IsAuthenticated == true)
             {
-                var userId = CurrentUserId();
                 FavoriteResourceIds = await _context.ResourceFavorites
                     .Where(f => f.UserId == userId)
                     .Select(f => f.ResourceId)

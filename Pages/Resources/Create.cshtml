@@ -45,6 +45,53 @@
         <input asp-for="UploadFile" class="form-control" type="file" />
     </div>
 
+    <!-- Visibility settings -->
+    <div class="privacy-card mb-4">
+        <div class="privacy-card__header">
+            <div class="d-flex align-items-center gap-3">
+                <div class="privacy-icon" id="privacy-icon-public">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                </div>
+                <div class="privacy-icon privacy-icon--private d-none" id="privacy-icon-private">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                </div>
+                <div>
+                    <p class="fw-600 mb-0" id="privacy-title">Public resource</p>
+                    <p class="text-muted small mb-0" id="privacy-subtitle">Visible to everyone in the library</p>
+                </div>
+            </div>
+            <div class="form-check form-switch m-0">
+                <input class="form-check-input privacy-toggle" type="checkbox" id="privateToggle" asp-for="Resource.IsPrivate" role="switch">
+                <label class="form-check-label visually-hidden" for="privateToggle">Private</label>
+            </div>
+        </div>
+
+        <!-- Private options (collapsed by default) -->
+        <div id="privateOptions" class="privacy-card__body" style="display:none;">
+            <div class="mb-3">
+                <label asp-for="Resource.Folder" class="form-label fw-500">Folder</label>
+                <input asp-for="Resource.Folder" class="form-control" placeholder="e.g. Математика, Physics notes, Exam prep..." />
+                <div class="form-text">Organize your private resources into folders. They will appear grouped in your Shared page.</div>
+            </div>
+
+            <div class="mb-1">
+                <label class="form-label fw-500">Share with users (by email)</label>
+                <div class="share-user-list" id="shareUserList"></div>
+                <div class="d-flex gap-2 mt-2">
+                    <input type="text" id="shareEmailInput" class="form-control" placeholder="Enter email address..." autocomplete="off" />
+                    <button type="button" class="btn btn-outline-primary px-3" id="addShareBtn" style="white-space:nowrap;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        Add
+                    </button>
+                </div>
+                <div class="form-text">These users will be able to view this resource in their <strong>Shared</strong> section.</div>
+                <div id="shareEmailError" class="text-danger small mt-1" style="display:none;"></div>
+            </div>
+            <!-- Hidden inputs for shared emails will be appended here -->
+            <div id="shareHiddenInputs"></div>
+        </div>
+    </div>
+
     <div class="d-flex gap-2">
         <button type="submit" class="btn btn-primary px-4">Publish resource</button>
         <a asp-page="Index" class="btn btn-outline-secondary px-4">Cancel</a>
@@ -53,5 +100,89 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
-}
+    <script>
+        (function () {
+            const toggle = document.getElementById('privateToggle');
+            const privateOptions = document.getElementById('privateOptions');
+            const privacyTitle = document.getElementById('privacy-title');
+            const privacySubtitle = document.getElementById('privacy-subtitle');
+            const iconPublic = document.getElementById('privacy-icon-public');
+            const iconPrivate = document.getElementById('privacy-icon-private');
 
+            function updateUI() {
+                if (toggle.checked) {
+                    privateOptions.style.display = 'block';
+                    setTimeout(() => privateOptions.classList.add('open'), 10);
+                    privacyTitle.textContent = 'Private resource';
+                    privacySubtitle.textContent = 'Only visible to you and selected users';
+                    iconPublic.classList.add('d-none');
+                    iconPrivate.classList.remove('d-none');
+                } else {
+                    privateOptions.classList.remove('open');
+                    setTimeout(() => { if (!toggle.checked) privateOptions.style.display = 'none'; }, 300);
+                    privacyTitle.textContent = 'Public resource';
+                    privacySubtitle.textContent = 'Visible to everyone in the library';
+                    iconPublic.classList.remove('d-none');
+                    iconPrivate.classList.add('d-none');
+                }
+            }
+
+            toggle.addEventListener('change', updateUI);
+            if (toggle.checked) {
+                privateOptions.style.display = 'block';
+                updateUI();
+            }
+
+            // Shared users tag system
+            const addBtn = document.getElementById('addShareBtn');
+            const emailInput = document.getElementById('shareEmailInput');
+            const tagList = document.getElementById('shareUserList');
+            const hiddenInputs = document.getElementById('shareHiddenInputs');
+            const errorDiv = document.getElementById('shareEmailError');
+            const sharedEmails = new Set();
+
+            function addEmail() {
+                const email = emailInput.value.trim().toLowerCase();
+                errorDiv.style.display = 'none';
+
+                if (!email) return;
+                if (!/^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/.test(email)) {
+                    errorDiv.textContent = 'Please enter a valid email address.';
+                    errorDiv.style.display = 'block';
+                    return;
+                }
+                if (sharedEmails.has(email)) {
+                    errorDiv.textContent = 'This email was already added.';
+                    errorDiv.style.display = 'block';
+                    return;
+                }
+
+                sharedEmails.add(email);
+                emailInput.value = '';
+
+                // Tag pill
+                const tag = document.createElement('div');
+                tag.className = 'share-tag';
+                tag.innerHTML = `<span>${email}</span><button type="button" class="share-tag__remove" title="Remove">&times;</button>`;
+                tag.querySelector('.share-tag__remove').addEventListener('click', () => {
+                    sharedEmails.delete(email);
+                    tag.remove();
+                    document.querySelector(`input[name="SharedEmails"][value="${email}"]`)?.remove();
+                });
+                tagList.appendChild(tag);
+
+                // Hidden input
+                const hidden = document.createElement('input');
+                hidden.type = 'hidden';
+                hidden.name = 'SharedEmails';
+                hidden.value = email;
+                hiddenInputs.appendChild(hidden);
+            }
+
+            addBtn.addEventListener('click', addEmail);
+            emailInput.addEventListener('keydown', e => {
+                if (e.key === 'Enter') { e.preventDefault(); addEmail(); }
+            });
+        })();
+    </script>
+}

@@ -702,3 +702,201 @@ h1, h2, h3, h4, h5, h6, .navbar-brand {
     width: 100%;
   }
 }
+
+/* =============================================
+   Privacy Card (Create page)
+   ============================================= */
+
+.privacy-card {
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: var(--transition-smooth);
+}
+
+.privacy-card:has(.privacy-toggle:checked) {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px hsla(256, 85%, 58%, 0.08);
+}
+
+.privacy-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.1rem 1.4rem;
+  cursor: pointer;
+}
+
+.privacy-card__body {
+  padding: 0 1.4rem;
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease, padding 0.3s ease;
+}
+
+.privacy-card__body.open {
+  max-height: 600px;
+  opacity: 1;
+  padding: 0 1.4rem 1.4rem;
+}
+
+.privacy-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--primary-light);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: var(--transition-smooth);
+}
+
+.privacy-icon--private {
+  background: hsl(256, 85%, 92%);
+  color: var(--primary);
+}
+
+.privacy-toggle {
+  width: 3em !important;
+  height: 1.6em !important;
+  cursor: pointer;
+}
+
+.privacy-toggle:checked {
+  background-color: var(--primary) !important;
+  border-color: var(--primary) !important;
+}
+
+/* Share tag pills */
+.share-user-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  min-height: 0;
+}
+
+.share-user-list:not(:empty) {
+  min-height: 36px;
+  margin-bottom: 0.5rem;
+}
+
+.share-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--primary-light);
+  color: var(--primary);
+  border: 1px solid hsla(256, 85%, 58%, 0.2);
+  border-radius: 100px;
+  padding: 0.25rem 0.75rem 0.25rem 0.9rem;
+  font-size: 0.82rem;
+  font-weight: 500;
+  animation: tagIn 0.2s ease;
+}
+
+@keyframes tagIn {
+  from { opacity: 0; transform: scale(0.85); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.share-tag__remove {
+  background: none;
+  border: none;
+  padding: 0;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--primary);
+  font-size: 1.1rem;
+  opacity: 0.6;
+  transition: opacity 0.15s;
+}
+
+.share-tag__remove:hover {
+  opacity: 1;
+}
+
+/* =============================================
+   Shared Folder (Shared page)
+   ============================================= */
+
+.shared-folder__header {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.shared-folder__icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--primary-light), hsl(256, 85%, 90%));
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.shared-folder__name {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-bottom: 0.1rem;
+  color: var(--text-main);
+}
+
+.shared-folder__count {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* Private resource card variant */
+.resource-card--private {
+  border-color: hsla(256, 85%, 58%, 0.15);
+  position: relative;
+}
+
+.resource-card--private::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(145deg, hsla(256, 85%, 58%, 0.025) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+/* Shared badge */
+.shared-badge {
+  background: var(--primary-light) !important;
+  color: var(--primary) !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-weight: 600;
+  font-size: 0.72rem;
+  letter-spacing: 0.3px;
+}
+
+/* Private badge (own resource) */
+.private-badge {
+  background: var(--accent-light) !important;
+  color: var(--accent-hover) !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-weight: 600;
+  font-size: 0.72rem;
+  letter-spacing: 0.3px;
+}
+
+/* fw- utilities for inline use */
+.fw-500 { font-weight: 500; }
+.fw-600 { font-weight: 600; }
+
